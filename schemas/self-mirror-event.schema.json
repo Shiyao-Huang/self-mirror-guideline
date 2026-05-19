@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-cli.local/schemas/self-mirror-event.schema.json",
+  "title": "SelfMirrorEvent",
+  "type": "object",
+  "required": ["level", "code", "feature", "purpose", "reason", "location"],
+  "additionalProperties": false,
+  "properties": {
+    "level": {
+      "type": "string",
+      "enum": ["error", "warning", "info"]
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[A-Z]{2,5}-[A-Z]{2,5}-[0-9]{3}$"
+    },
+    "feature": {
+      "type": "string",
+      "minLength": 1
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "location": {
+      "type": "object",
+      "required": ["file"],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "dependency": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "remediation": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "causeCode": {
+      "type": "string"
+    },
+    "traceId": {
+      "type": "string"
+    }
+  }
+}
+
