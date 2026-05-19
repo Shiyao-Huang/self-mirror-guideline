@@ -11,13 +11,13 @@
 发布到 GitHub 后按这个方式安装：
 
 ```bash
-curl -sfL https://raw.githubusercontent.com/copizzah/self-mirror-guideline/main/install.sh | bash
+curl -sfL https://raw.githubusercontent.com/Shiyao-Huang/self-mirror-guideline/main/install.sh | bash
 ```
 
 卸载：
 
 ```bash
-curl -sfL https://raw.githubusercontent.com/copizzah/self-mirror-guideline/main/install.sh | bash -s -- --uninstall
+curl -sfL https://raw.githubusercontent.com/Shiyao-Huang/self-mirror-guideline/main/install.sh | bash -s -- --uninstall
 ```
 
 如果仓库地址还没有固定，可以用环境变量安装 fork：

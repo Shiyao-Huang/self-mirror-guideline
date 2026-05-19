@@ -2,12 +2,12 @@
 #
 # self-mirror-guideline — one-line installer
 # Usage:
-#   curl -sfL https://raw.githubusercontent.com/<owner>/self-mirror-guideline/main/install.sh | bash
-#   curl -sfL https://raw.githubusercontent.com/<owner>/self-mirror-guideline/main/install.sh | bash -s -- --uninstall
+#   curl -sfL https://raw.githubusercontent.com/Shiyao-Huang/self-mirror-guideline/main/install.sh | bash
+#   curl -sfL https://raw.githubusercontent.com/Shiyao-Huang/self-mirror-guideline/main/install.sh | bash -s -- --uninstall
 #
 set -euo pipefail
 
-REPO="${SELF_MIRROR_REPO:-https://github.com/copizzah/self-mirror-guideline.git}"
+REPO="${SELF_MIRROR_REPO:-https://github.com/Shiyao-Huang/self-mirror-guideline.git}"
 SKILL_NAME="${SELF_MIRROR_SKILL_NAME:-self-mirror-guideline}"
 
 detect_codex_home() {
@@ -113,5 +113,4 @@ echo "  - $TARGET_DIR/examples"
 echo "  - $TARGET_DIR/schemas"
 echo ""
 echo "To uninstall:"
-echo "  curl -sfL https://raw.githubusercontent.com/<owner>/self-mirror-guideline/main/install.sh | bash -s -- --uninstall"
-
+echo "  curl -sfL https://raw.githubusercontent.com/Shiyao-Huang/self-mirror-guideline/main/install.sh | bash -s -- --uninstall"
