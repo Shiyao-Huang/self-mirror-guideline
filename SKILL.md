@@ -1,6 +1,9 @@
 ---
 name: self-mirror-guideline
 description: Use when writing or reviewing code for agent-operated systems that need searchable self-awareness comments, Mermaid adjacency links, GitNexus dependency evidence, and structured error/warning/info events.
+version: 1.0.0
+authors:
+  - Shiyao-Huang
 ---
 
 # Self Mirror Guideline
@@ -56,6 +59,8 @@ Make every important code node, dependency edge, and runtime failure searchable 
 
 ## Reference Files
 
+These files are bundled with the skill and provide detailed rules:
+
 - `references/comment-markers.md`: `@sm` marker rules.
 - `references/error-warning-info-contract.md`: structured event contract.
 - `references/mermaid-adjacency-comments.md`: Mermaid-to-code adjacency rules.
@@ -70,3 +75,20 @@ Make every important code node, dependency edge, and runtime failure searchable 
 - Does the error explain what feature it protects, not only what failed?
 - Is the Mermaid graph in the design doc consistent with the code anchors?
 
+## Global Principles
+
+1. First name the node, then name the code.
+2. Comments only mark searchable structural facts, never restate surface behavior.
+3. Errors are not strings — errors are events with feature, purpose, location.
+4. Mermaid lives in design docs; source code only gets stable anchors and short relations.
+5. GitNexus discovers real dependencies; Self Mirror explains them into agent-actionable context.
+
+## Minimal Landing Standard
+
+A new module must include at minimum:
+
+- One Mermaid node id.
+- One `@sm:node` comment anchor.
+- One `@sm:feature` ownership tag.
+- One `@sm:evidence` verification command or evidence.
+- Failure paths use structured `SelfMirrorEvent`.

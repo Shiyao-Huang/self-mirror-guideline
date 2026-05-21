@@ -1,21 +1,54 @@
 #!/usr/bin/env bash
 #
 # self-mirror-guideline — one-line installer
-# Usage:
+#
+# Install (Claude Code):
 #   curl -sfL https://raw.githubusercontent.com/Shiyao-Huang/self-mirror-guideline/main/install.sh | bash
+#
+# Install (Codex):
+#   SELF_MIRROR_TARGET=codex bash install.sh
+#
+# Install (both):
+#   SELF_MIRROR_TARGET=all bash install.sh
+#
+# Uninstall:
 #   curl -sfL https://raw.githubusercontent.com/Shiyao-Huang/self-mirror-guideline/main/install.sh | bash -s -- --uninstall
+#
+# Install a fork:
+#   SELF_MIRROR_REPO=https://github.com/<owner>/self-mirror-guideline.git bash install.sh
 #
 set -euo pipefail
 
 REPO="${SELF_MIRROR_REPO:-https://github.com/Shiyao-Huang/self-mirror-guideline.git}"
 SKILL_NAME="${SELF_MIRROR_SKILL_NAME:-self-mirror-guideline}"
+BRANCH="${SELF_MIRROR_BRANCH:-main}"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+info() { echo -e "${BLUE}[INFO]${NC} $*"; }
+ok()   { echo -e "${GREEN}[OK]${NC} $*"; }
+warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
+die()  { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
+
+# ── Detection ────────────────────────────────────────────────
+
+detect_claude_home() {
+  if [ -n "${CLAUDE_HOME:-}" ]; then
+    echo "$CLAUDE_HOME"
+    return
+  fi
+  echo "$HOME/.claude"
+}
 
 detect_codex_home() {
   if [ -n "${CODEX_HOME:-}" ]; then
     echo "$CODEX_HOME"
     return
   fi
-
   local codex_bin
   codex_bin="$(command -v codex 2>/dev/null || true)"
   if [ -n "$codex_bin" ]; then
@@ -26,91 +59,173 @@ detect_codex_home() {
       return
     fi
   fi
-
   if [ -d "${XDG_CONFIG_HOME:-$HOME/.config}/codex" ]; then
     echo "${XDG_CONFIG_HOME:-$HOME/.config}/codex"
     return
   fi
-
   echo "$HOME/.codex"
 }
 
-CODEX_HOME="$(detect_codex_home)"
-INSTALL_DIR="${SELF_MIRROR_INSTALL_DIR:-$CODEX_HOME/self-mirror-guideline}"
-SKILLS_DIR="$CODEX_HOME/skills"
-TARGET_DIR="$SKILLS_DIR/$SKILL_NAME"
+has_claude() {
+  [ -d "$(detect_claude_home)" ] || [ -n "${CLAUDE_HOME:-}" ]
+}
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+has_codex() {
+  [ -d "$(detect_codex_home)" ] || [ -n "${CODEX_HOME:-}" ]
+}
 
-info() { echo -e "${BLUE}[INFO]${NC} $*"; }
-ok() { echo -e "${GREEN}[OK]${NC} $*"; }
-warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
+resolve_targets() {
+  local target="${SELF_MIRROR_TARGET:-}"
+  local targets=()
+
+  if [ "$target" = "claude" ]; then
+    targets+=("claude")
+  elif [ "$target" = "codex" ]; then
+    targets+=("codex")
+  elif [ "$target" = "all" ]; then
+    targets+=("claude" "codex")
+  else
+    if has_claude; then targets+=("claude"); fi
+    if has_codex; then targets+=("codex"); fi
+  fi
+
+  if [ ${#targets[@]} -eq 0 ]; then
+    targets+=("claude")
+  fi
+
+  echo "${targets[*]}"
+}
+
+# ── Install / Uninstall logic ────────────────────────────────
+
+clone_or_update() {
+  local install_dir="$1"
+  if [ -d "$install_dir/.git" ]; then
+    info "Updating existing clone at $install_dir..."
+    git -C "$install_dir" fetch --depth 1 origin "$BRANCH"
+    git -C "$install_dir" reset --hard "origin/$BRANCH"
+  else
+    info "Cloning $REPO ($BRANCH) to $install_dir..."
+    rm -rf "$install_dir"
+    git clone --depth 1 --branch "$BRANCH" "$REPO" "$install_dir"
+  fi
+}
 
 copy_skill_bundle() {
-  mkdir -p "$TARGET_DIR"
-  cp "$INSTALL_DIR/SKILL.md" "$TARGET_DIR/SKILL.md"
+  local src="$1"
+  local target_dir="$2"
+
+  mkdir -p "$target_dir"
+  cp "$src/SKILL.md" "$target_dir/SKILL.md"
 
   for dir in references examples schemas docs; do
-    rm -rf "$TARGET_DIR/$dir"
-    if [ -d "$INSTALL_DIR/$dir" ]; then
-      cp -R "$INSTALL_DIR/$dir" "$TARGET_DIR/$dir"
+    rm -rf "$target_dir/$dir"
+    if [ -d "$src/$dir" ]; then
+      cp -R "$src/$dir" "$target_dir/$dir"
     fi
   done
 }
 
+install_to_claude() {
+  local claude_home
+  claude_home="$(detect_claude_home)"
+  local skills_dir="$claude_home/skills"
+  local target_dir="$skills_dir/$SKILL_NAME"
+
+  mkdir -p "$skills_dir"
+  copy_skill_bundle "$INSTALL_DIR" "$target_dir"
+  ok "Claude Code skill installed: $target_dir"
+}
+
+install_to_codex() {
+  local codex_home
+  codex_home="$(detect_codex_home)"
+  local skills_dir="$codex_home/skills"
+  local target_dir="$skills_dir/$SKILL_NAME"
+
+  mkdir -p "$skills_dir"
+  copy_skill_bundle "$INSTALL_DIR" "$target_dir"
+  ok "Codex skill installed: $target_dir"
+}
+
+uninstall_from_claude() {
+  local claude_home
+  claude_home="$(detect_claude_home)"
+  local target_dir="$claude_home/skills/$SKILL_NAME"
+
+  if [ -d "$target_dir" ]; then
+    rm -rf "$target_dir"
+    ok "Removed Claude Code skill: $target_dir"
+  fi
+}
+
+uninstall_from_codex() {
+  local codex_home
+  codex_home="$(detect_codex_home)"
+  local target_dir="$codex_home/skills/$SKILL_NAME"
+
+  if [ -d "$target_dir" ]; then
+    rm -rf "$target_dir"
+    ok "Removed Codex skill: $target_dir"
+  fi
+}
+
+# ── Main ─────────────────────────────────────────────────────
+
+INSTALL_DIR="${SELF_MIRROR_INSTALL_DIR:-}"
+
 if [ "${1:-}" = "--uninstall" ]; then
   info "Uninstalling $SKILL_NAME..."
-  rm -rf "$TARGET_DIR"
-  ok "Removed skill: $TARGET_DIR"
 
-  if [ -d "$INSTALL_DIR" ]; then
+  if [ -n "$INSTALL_DIR" ] && [ -d "$INSTALL_DIR" ]; then
     rm -rf "$INSTALL_DIR"
-    ok "Removed install dir: $INSTALL_DIR"
+    ok "Removed clone: $INSTALL_DIR"
   fi
+
+  uninstall_from_claude
+  uninstall_from_codex
 
   ok "$SKILL_NAME uninstalled."
   exit 0
 fi
 
-info "Codex home detected: $CODEX_HOME"
-command -v git >/dev/null 2>&1 || error "git is required."
+command -v git >/dev/null 2>&1 || die "git is required."
 
-mkdir -p "$SKILLS_DIR"
-
-if [ -d "$INSTALL_DIR/.git" ]; then
-  info "Updating existing installation at $INSTALL_DIR..."
-  git -C "$INSTALL_DIR" fetch --depth 1 origin
-  git -C "$INSTALL_DIR" reset --hard origin/main
-else
-  info "Cloning $REPO to $INSTALL_DIR..."
-  rm -rf "$INSTALL_DIR"
-  git clone --depth 1 "$REPO" "$INSTALL_DIR"
+# Resolve clone directory
+if [ -z "$INSTALL_DIR" ]; then
+  CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/self-mirror-guideline"
+  INSTALL_DIR="$CACHE_DIR/repo"
 fi
 
-[ -f "$INSTALL_DIR/SKILL.md" ] || error "Missing SKILL.md in $INSTALL_DIR"
+clone_or_update "$INSTALL_DIR"
 
-info "Installing skill bundle to $TARGET_DIR..."
-copy_skill_bundle
-ok "Skill installed: $SKILL_NAME"
+[ -f "$INSTALL_DIR/SKILL.md" ] || die "Missing SKILL.md in $INSTALL_DIR"
+
+# Resolve targets
+targets="$(resolve_targets)"
+info "Install targets: $targets"
+
+for target in $targets; do
+  case "$target" in
+    claude) install_to_claude ;;
+    codex)  install_to_codex  ;;
+  esac
+done
 
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}  self-mirror-guideline installed successfully${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo "Restart Codex to use the skill:"
-echo "  - $SKILL_NAME"
+echo "Installed to:"
+for target in $targets; do
+  case "$target" in
+    claude) echo "  - Claude Code: $(detect_claude_home)/skills/$SKILL_NAME/" ;;
+    codex)  echo "  - Codex:       $(detect_codex_home)/skills/$SKILL_NAME/" ;;
+  esac
+done
 echo ""
-echo "Installed files:"
-echo "  - $TARGET_DIR/SKILL.md"
-echo "  - $TARGET_DIR/references"
-echo "  - $TARGET_DIR/examples"
-echo "  - $TARGET_DIR/schemas"
+echo "Restart Claude Code / Codex to use the skill."
 echo ""
 echo "To uninstall:"
 echo "  curl -sfL https://raw.githubusercontent.com/Shiyao-Huang/self-mirror-guideline/main/install.sh | bash -s -- --uninstall"
