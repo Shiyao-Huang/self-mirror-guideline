@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "name": "codeflow",
+      "required": true,
+      "reason": "Repository architecture, impact, ownership, churn, security, and contract evidence."
+    },
+    {
+      "name": "self-mirror-guideline",
+      "required": true,
+      "reason": "Searchable @sm anchors, structured events, GitNexus evidence conventions, and Mermaid adjacency rules."
+    }
+  ],
+  "tools": [
+    {
+      "name": "gitnexus",
+      "required": true,
+      "check": "gitnexus status",
+      "reason": "Discovers real definitions, callers, callees, flows, and clusters before graph changes."
+    },
+    {
+      "name": "node",
+      "required": true,
+      "check": "node --version",
+      "reason": "Runs CodeFlow headless scripts."
+    },
+    {
+      "name": "python3",
+      "required": true,
+      "check": "python3 --version",
+      "reason": "Runs mermaid-architect graph tooling."
+    }
+  ]
+}

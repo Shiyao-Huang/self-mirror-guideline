@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mermaid Architect"
+  short_description: "Plan and execute Mermaid DAG workflows"
+  default_prompt: "Use $mermaid-architect to decompose this task into a four-layer Mermaid DAG and identify the next ready nodes."

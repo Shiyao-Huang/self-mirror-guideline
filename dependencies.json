@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "name": "mermaid-architect",
+      "required": true,
+      "reason": "Mirror Graph object model, Mermaid render views, blockers, ready nodes, node comments, iterations, and interview-driven rank."
+    },
+    {
+      "name": "codeflow",
+      "required": true,
+      "reason": "Repository architecture, impact, ownership, churn, security, and cross-repo contract evidence."
+    }
+  ],
+  "tools": [
+    {
+      "name": "gitnexus",
+      "required": true,
+      "check": "gitnexus status",
+      "reason": "Symbol, caller, callee, flow, and cluster evidence for @sm dependency claims."
+    },
+    {
+      "name": "node",
+      "required": true,
+      "check": "node --version",
+      "reason": "Runs CodeFlow headless scripts."
+    },
+    {
+      "name": "python3",
+      "required": true,
+      "check": "python3 --version",
+      "reason": "Runs Mirror Graph and dependency verification scripts."
+    }
+  ]
+}

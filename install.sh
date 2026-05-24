@@ -118,10 +118,16 @@ copy_skill_bundle() {
   mkdir -p "$target_dir"
   cp "$src/SKILL.md" "$target_dir/SKILL.md"
 
-  for dir in references examples schemas docs; do
+  for dir in references examples schemas docs scripts vendor; do
     rm -rf "$target_dir/$dir"
     if [ -d "$src/$dir" ]; then
       cp -R "$src/$dir" "$target_dir/$dir"
+    fi
+  done
+
+  for file in dependencies.json; do
+    if [ -f "$src/$file" ]; then
+      cp "$src/$file" "$target_dir/$file"
     fi
   done
 }
